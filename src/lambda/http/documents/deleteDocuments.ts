@@ -20,10 +20,10 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         }
     }
 
-    const document = await getDocument(documentId);
+    const document = await deleteDocument(documentId);
     
     return {
-        statusCode: 200,
+        statusCode: 204,
         headers: {
             'Access-Control-Allow-Origin': "*"
         },
@@ -44,15 +44,13 @@ const documentExists = async (documentId: string) => {
     return !!result.Item
 }
 
-const getDocument = async (documentId: string) => {
-    const documents = await docClient.query({
+const deleteDocument = async (documentId: string) => {
+    const documents = await docClient.delete({
         TableName: documentsTable,
-        KeyConditionExpression: 'id = :documentId',
-        ExpressionAttributeValues: {
-          ':documentId': documentId
-        },
-        ScanIndexForward: false 
+        Key: {
+            id: documentId
+        } 
     }).promise()
 
-    return documents.Items;
+    return documents.Attributes;
 }

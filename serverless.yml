@@ -38,8 +38,8 @@ provider:
         - dynamodb:GetItem
         - dynamodb:Query
         - dynamodb:PutItem
+        - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENTS_TABLE}
-
 
 functions:
   GetDocuments:
@@ -49,7 +49,13 @@ functions:
           method: get
           path: documents/{documentId}
           cors: true
-  
+  GetAllDocuments:
+    handler: src/lambda/http/documents/getAllDocuments.handler
+    events:
+      - http:
+          method: get
+          path: documents
+          cors: true
   CreateDocuments:
     handler: src/lambda/http/documents/createDocuments.handler
     events:
@@ -58,11 +64,18 @@ functions:
           path: documents
           cors: true
           request:
-            schema: 
-              application/json: ${file(models/create-document-request.json)} 
+            schema:
+              application/json: ${file(models/create-document-request.json)}
           documentation:
             summary: Create a new document
             description: Creates a new document
+  DeleteDocuments:
+    handler: src/lambda/http/documents/deleteDocuments.handler
+    events:
+      - http:
+          method: delete
+          path: documents/{documentId}
+          cors: true
 resources:
   Resources:
     DocumentsDynamoDBTable:
@@ -78,4 +91,3 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.DOCUMENTS_TABLE}
-

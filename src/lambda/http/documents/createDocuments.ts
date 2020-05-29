@@ -7,8 +7,10 @@ const docClient = new AWS.DynamoDB.DocumentClient()
 const documentsTable = process.env.DOCUMENTS_TABLE
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log('Processing event: ', event);
-
+    /**
+     * Requesting ID from users as a mandatory field but replacing it
+     * to maintain consistency
+     */
     const itemId = uuid.v4();
 
     const parsedBody = JSON.parse(event.body)
