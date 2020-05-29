@@ -1,5 +1,6 @@
 {
   "name": "formstack-api",
+  "private": true,
   "version": "1.0.0",
   "description": "Serverless webpack example using Typescript",
   "main": "handler.js",
@@ -7,12 +8,15 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "source-map-support": "^0.5.10"
+    "source-map-support": "^0.5.10",
+    "uuid": "^8.1.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.17",
     "@types/node": "^10.12.18",
+    "aws-sdk": "^2.686.0",
     "fork-ts-checker-webpack-plugin": "^3.0.1",
+    "serverless-aws-documentation": "^1.1.0",
     "serverless-webpack": "^5.2.0",
     "ts-loader": "^5.3.3",
     "typescript": "^3.2.4",

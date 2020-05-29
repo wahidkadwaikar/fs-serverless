@@ -6,21 +6,54 @@ const docClient = new AWS.DynamoDB.DocumentClient()
 const documentsTable = process.env.DOCUMENTS_TABLE
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log('Processing event: ', event);
+    const documentId = event.pathParameters.documentId;
+    const validDocumentId = await documentExists(documentId);
 
-    const result = await docClient.scan({
-        TableName: documentsTable
-    }).promise()
+    if (!validDocumentId) {
+        return {
+            statusCode: 404,
+            headers: {
+                'Access-Control-Allow-Origin': "*"
+            },
+            body: JSON.stringify({
+                error: 'Group does not exist'
+            })
+        }
+    }
 
-    const items = result.Items;
-
+    const document = await getDocument(documentId);
+    
     return {
         statusCode: 200,
         headers: {
             'Access-Control-Allow-Origin': "*"
         },
         body: JSON.stringify({
-            items
+            document
         })
     }
+}
+
+const documentExists = async (documentId: string) => {
+    const result = await docClient.get({
+        TableName: documentsTable,
+        Key: {
+            id: documentId
+        }
+    }).promise()
+
+    return !!result.Item
+}
+
+const getDocument = async (documentId: string) => {
+    const documents = await docClient.query({
+        TableName: documentsTable,
+        KeyConditionExpression: 'id = :documentId',
+        ExpressionAttributeValues: {
+          ':documentId': documentId
+        },
+        ScanIndexForward: false 
+    }).promise()
+
+    return documents.Items;
 }
