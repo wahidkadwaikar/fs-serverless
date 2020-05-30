@@ -1,30 +1,93 @@
 service:
   name: formstack-api
-# app and org for use with dashboard.serverless.com
-#app: your-app-name
-#org: your-org-name
 
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules: true
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Formstack API
+        description: Formstack serverless API for documents
 
-# Add the serverless-webpack plugin
 plugins:
   - serverless-webpack
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
 
 provider:
   name: aws
   runtime: nodejs12.x
+  region: ${opt:region, 'us-west-2'}
+  stage: ${opt:stage, 'dev'}
+  initials: ${opt:initials, 'wk'}
+
   apiGateway:
-    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+    minimumCompressionSize: 1024
+
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    DOCUMENTS_TABLE: documents-${self:provider.initials}-${self:provider.stage}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:Query
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENTS_TABLE}
 
 functions:
-  hello:
-    handler: handler.hello
+  GetDocuments:
+    handler: src/lambda/http/documents/getDocuments.handler
     events:
       - http:
           method: get
-          path: hello
+          path: documents/{documentId}
+          cors: true
+  GetAllDocuments:
+    handler: src/lambda/http/documents/getAllDocuments.handler
+    events:
+      - http:
+          method: get
+          path: documents
+          cors: true
+  CreateDocuments:
+    handler: src/lambda/http/documents/createDocuments.handler
+    events:
+      - http:
+          method: post
+          path: documents
+          cors: true
+          request:
+            schema:
+              application/json: ${file(models/create-document-request.json)}
+          documentation:
+            summary: Create a new document
+            description: Creates a new document
+  DeleteDocuments:
+    handler: src/lambda/http/documents/deleteDocuments.handler
+    events:
+      - http:
+          method: delete
+          path: documents/{documentId}
+          cors: true
+resources:
+  Resources:
+    DocumentsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.DOCUMENTS_TABLE}
