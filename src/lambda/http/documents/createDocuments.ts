@@ -1,5 +1,7 @@
 import * as AWS from 'aws-sdk';
 import { APIGatewayProxyHandler, APIGatewayProxyResult, APIGatewayProxyEvent } from 'aws-lambda';
+import { createLogger } from '../../../utils/logger';
+const logger = createLogger('auth')
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 
@@ -23,6 +25,15 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         TableName: documentsTable,
         Item: newItem
     }).promise()
+
+    
+    /**
+     * Similar logging can be done throughout the application
+     * to log important events
+     */
+    logger.info('Document was create', {
+        key: newItem.id
+      })
 
     return {
         statusCode: 201,
